@@ -20,17 +20,21 @@ public class MqttBackgroundService : BackgroundService
         _mqttFactory = new MqttClientFactory();
         _mqttClient = _mqttFactory.CreateMqttClient();
     }
+    private string NormalizeSensorId(string rawId)
+    {
+        return int.TryParse(rawId, out var parsed) ? parsed.ToString() : rawId.Trim();
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var options = new MqttClientOptionsBuilder()
             .WithTcpServer("1778b10659bc42eb8a5bf9ecbd39379d.s1.eu.hivemq.cloud", 8883) // Replace with your broker address
             .WithClientId("PeteLinkDashboard")
-            .WithCredentials("PeteLink", "Natomisen7") // Replace with your username and password
+            .WithCredentials("PeteLinkDashboard", "PeteLinkDashboard1") // Replace with your username and password
             .WithTlsOptions(tls => {
                 tls.UseTls();
             })
-            .WithCleanSession()
+            .WithCleanSession(false)
             .Build();
 
         _mqttClient.ApplicationMessageReceivedAsync += async e =>
@@ -40,21 +44,30 @@ public class MqttBackgroundService : BackgroundService
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var topic = e.ApplicationMessage.Topic;
 
-                _logger.LogInformation($"[MQTT RAW] Topic: {topic} | Payload: {payload}");
                 _logger.LogInformation($"MQTT Message received. Topic: {topic} | Payload: {payload}");
 
-                // Example: parse the payload and push to shared state
-                var reading = JsonSerializer.Deserialize<SensorReading>(payload);
-                if (reading != null)
+                var json = JsonDocument.Parse(payload).RootElement;
+
+                var rawSensorId = json.GetProperty("sensor").GetString();
+
+                var reading = new SensorReading
                 {
-                    _sensorDataService.UpdateReading(reading);
-                }
+                    SensorID = NormalizeSensorId(rawSensorId),
+                    PressurePSI = json.GetProperty("pressure").GetDouble(),
+                    BatteryVoltage = json.GetProperty("battery").GetDouble(),
+                    Temperature = json.GetProperty("temperature").GetDouble(),
+                    TimeStamp = DateTime.UtcNow
+                };
+
+
+                _sensorDataService.UpdateReading(reading);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing MQTT message");
             }
         };
+
 
         _mqttClient.ConnectedAsync += async e =>
         {

@@ -25,9 +25,21 @@ public partial class MonitoringPage : ComponentBase
 
     private void OnSensorDataChanged()
     {
-        liveReadings = SensorDataService.GetReadings().ToList();
+        var updatedReadings = SensorDataService.GetReadings();
+
+        // Create a dictionary for fast lookups
+        var readingDict = liveReadings.ToDictionary(r => r.SensorID);
+
+        // Update or insert readings
+        foreach (var reading in updatedReadings)
+        {
+            readingDict[reading.SensorID] = reading;
+        }
+
+        liveReadings = readingDict.Values.ToList();
         InvokeAsync(StateHasChanged);
     }
+
 
     public void Dispose()
     {
