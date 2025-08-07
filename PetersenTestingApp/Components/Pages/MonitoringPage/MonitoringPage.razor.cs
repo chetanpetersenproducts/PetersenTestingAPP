@@ -13,6 +13,28 @@ public partial class MonitoringPage : ComponentBase
     private List<SensorReading> plotData = new();
     private string? errorMessage;
 
+    [Inject] private SensorDataService SensorDataService { get; set; }
+
+    private IReadOnlyCollection<SensorReading> readings = [];
+
+    protected override void OnInitialized()
+    {
+        liveReadings = SensorDataService.GetReadings().ToList();
+        SensorDataService.OnChange += OnSensorDataChanged;
+    }
+
+    private void OnSensorDataChanged()
+    {
+        liveReadings = SensorDataService.GetReadings().ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SensorDataService.OnChange -= OnSensorDataChanged;
+    }
+
+
     private PlotQuery query = new()
     {
         StartDate = DateTime.UtcNow.AddHours(-12),

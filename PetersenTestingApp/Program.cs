@@ -19,6 +19,9 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents().AddMicrosoftIdentityConsentHandler();
 
+builder.Services.AddSingleton<SensorDataService>();
+builder.Services.AddHostedService<MqttBackgroundService>();
+
 builder.Services.AddSingleton<PetersenTestingAppLibrary.Classes.Utils>(new PetersenTestingAppLibrary.Classes.Utils());
 builder.Services.AddScoped(ServiceProvider => new UserService(ServiceProvider.GetRequiredService<PetersenTestingAppLibrary.Classes.Utils>()));
 builder.Services.AddScoped(ServiceProvider => new BackendService(ServiceProvider.GetRequiredService<PetersenTestingAppLibrary.Classes.Utils>()));
