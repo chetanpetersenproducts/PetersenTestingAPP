@@ -1,4 +1,3 @@
-using Blazorise;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Server.Circuits;
@@ -6,8 +5,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using PetersenTestingApp.Components;
 using PetersenTestingAppLibrary.Services;
-using Blazorise.Bootstrap5;
-using Blazorise.Charts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,13 +18,6 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents().AddMicrosoftIdentityConsentHandler();
-
-builder.Services
-    .AddBlazorise(options =>
-    {
-        options.Immediate = true;
-    })
-    .AddBootstrap5Providers();
 
 builder.Services.AddSingleton<PetersenTestingAppLibrary.Classes.Utils>(new PetersenTestingAppLibrary.Classes.Utils());
 builder.Services.AddScoped(ServiceProvider => new UserService(ServiceProvider.GetRequiredService<PetersenTestingAppLibrary.Classes.Utils>()));
