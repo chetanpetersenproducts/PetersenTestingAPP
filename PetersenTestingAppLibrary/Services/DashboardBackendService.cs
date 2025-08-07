@@ -18,14 +18,15 @@ public class DashboardBackendService
 
         var query = @"
             WITH LatestReadings AS (
-            SELECT *,
-                   ROW_NUMBER() OVER (PARTITION BY SensorID ORDER BY TimeStamp DESC) AS rn
-            FROM PeteLinkTest
+                SELECT *,
+                       ROW_NUMBER() OVER (PARTITION BY SensorID ORDER BY TimeStamp DESC) AS rn
+                FROM PeteLinkTest
+                WHERE TimeStamp >= DATEADD(HOUR, -12, GETUTCDATE())
             )
             SELECT SensorID, TimeStamp, PressurePSI, BatteryVoltage, Temperature
             FROM LatestReadings
             WHERE rn = 1
-            ";
+        ";
 
         using var conn = new SqlConnection(_utils.sqlServerConnection);
         using var cmd = new SqlCommand(query, conn);
