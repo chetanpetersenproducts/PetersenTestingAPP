@@ -27,9 +27,14 @@ public class MqttBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var instanceId = Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID")
+               ?? Guid.NewGuid().ToString("N");
+        var slotName = Environment.GetEnvironmentVariable("WEBSITE_SLOT_NAME") ?? "production";
+        var clientId = $"petersen-pressure-{slotName}-{instanceId}";
+
         var options = new MqttClientOptionsBuilder()
             .WithTcpServer("1778b10659bc42eb8a5bf9ecbd39379d.s1.eu.hivemq.cloud", 8883) // Replace with your broker address
-            .WithClientId("PeteLinkDashboard")
+            .WithClientId(clientId)
             .WithCredentials("PeteLinkDashboard", "PeteLinkDashboard1") // Replace with your username and password
             .WithTlsOptions(tls => {
                 tls.UseTls();
